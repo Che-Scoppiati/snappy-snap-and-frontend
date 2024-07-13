@@ -7,9 +7,10 @@ export const useRequestSnap = () => {
       const test = await window.ethereum.request({
         method: "wallet_requestSnaps",
         params: {
-          "npm:@solflare-wallet/solana-snap": {
-            version: "^1.0.3",
-          },
+          // "npm:@solflare-wallet/solana-snap": {
+          //   version: "^1.0.3",
+          // },
+          "local:http://localhost:8080": {},
         },
       });
       console.log(test);

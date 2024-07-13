@@ -22,7 +22,11 @@ export async function createMenuInterface(): Promise<string> {
         heading(" Gm! How can I help you?"),
         text("Ask me for a transaction operation or for information!"),
         button({ value: "Transaction", name: "transaction" }),
-        button({ value: "Knowledge Base", name: "knowledge-base" }),
+        button({
+          value: "Knowledge Base",
+          name: "knowledge-base",
+          variant: "secondary",
+        }),
       ]),
     },
   });
@@ -61,6 +65,35 @@ export async function createTransactionInterface(id: string) {
   });
 }
 
+export async function createKnowledgeBaseInterface(id: string) {
+  await snap.request({
+    method: "snap_updateInterface",
+    params: {
+      id,
+      ui: panel([
+        heading("What do you want to know? 🔮"),
+        text(
+          "There are no stupid questions. Ask me anything about Ethereum, DeFi, NFTs, or anything else!"
+        ),
+        form({
+          name: "knowledge-base-form",
+          children: [
+            input({
+              label: "Prompt",
+              name: "user-prompt",
+              placeholder: "What is UniSwap?",
+            }),
+            button({
+              value: "Ask",
+              buttonType: "submit",
+            }),
+          ],
+        }),
+      ]),
+    },
+  });
+}
+
 export async function showTransactionGenerationLoader(id: string) {
   await snap.request({
     method: "snap_updateInterface",
@@ -72,6 +105,56 @@ export async function showTransactionGenerationLoader(id: string) {
           "Please wait. This should only take a few seconds. I'm thinking..."
         ),
         spinner(),
+      ]),
+    },
+  });
+}
+
+export async function showKnowledgeBaseLoader(id: string) {
+  await snap.request({
+    method: "snap_updateInterface",
+    params: {
+      id,
+      ui: panel([
+        heading("Searching for knowledge... 🔍"),
+        text("Please wait. This should only take a few seconds."),
+        spinner(),
+      ]),
+    },
+  });
+}
+
+export async function showKnowledgeBaseResult(
+  id: string,
+  result: {
+    text: string;
+    sourceDocuments: {
+      pageContent: string;
+      metadata: {
+        description: string;
+        language: string;
+        source: string;
+        title: string;
+      };
+    }[];
+  }
+) {
+  await snap.request({
+    method: "snap_updateInterface",
+    params: {
+      id,
+      ui: panel([
+        heading("Here is what I found! 📚"),
+        text(result.text),
+        divider(),
+        heading("Source Documents:"),
+        ...result.sourceDocuments.map((doc) => {
+          return panel([
+            text(
+              `[${doc.metadata.title} [${doc.metadata.language}]](${doc.metadata.source})`
+            ),
+          ]);
+        }),
       ]),
     },
   });
@@ -101,7 +184,7 @@ export async function showTransactionResult(
         text(description),
         divider(),
         text("Please click the button below to proceed."),
-        text(`[Fire Transaction 🔥](${link + "?test=2"})`),
+        text(`[Fire Transaction 🔥](${link})`),
       ]),
     },
   });

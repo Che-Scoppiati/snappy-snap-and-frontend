@@ -9,14 +9,18 @@ import {
   OnUserInputHandler,
 } from "@metamask/snaps-sdk";
 import {
+  createKnowledgeBaseInterface,
   createMenuInterface,
   createTransactionInterface,
   showErrorResult,
+  showKnowledgeBaseLoader,
+  showKnowledgeBaseResult,
   showTransactionGenerationLoader,
   showTransactionResult,
 } from "./ui";
 
-const BRIAN_MIDDLEWARE_BASE_URL = process.env.BRIAN_MIDDLEWARE_BASE_URL;
+const BRIAN_MIDDLEWARE_BASE_URL = process.env.BRIAN_MIDDLEWARE_BASE_URL!;
+const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL!;
 
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
@@ -68,8 +72,7 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
         break;
       case "knowledge-base":
         console.log("Knowledge base clicked 🟡");
-        // await createKnowledgeBaseInterface(id);
-        // openPopup("https://google.com");
+        await createKnowledgeBaseInterface(id);
         break;
 
       case "error-message":
@@ -118,12 +121,99 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
       // );
       // const data = await result.json();
       // console.log("Brian response:", JSON.stringify(data));
+      console.log("URL for SUBMITTING THE TX:", `${FRONTEND_BASE_URL}/tx`);
       await showTransactionResult(
         id,
-        "https://google.com",
+        `${FRONTEND_BASE_URL}/tx`,
         // data.data[0].data.description
         "Transaction generated"
       );
+    } catch (error) {
+      console.error("Brian error:", error);
+      await showErrorResult(id, "Brian error");
+    }
+  }
+
+  /** Handle Knowledge Base Form */
+  if (
+    event.type === UserInputEventType.FormSubmitEvent &&
+    event.name === "knowledge-base-form"
+  ) {
+    console.log("Knowledge base form submitted 🟡");
+    const { "user-prompt": userPrompt } = event.value;
+
+    if (!userPrompt) {
+      console.error("Knowledge base prompt is empty");
+      await showErrorResult(
+        id,
+        "Your prompt is empty! I can't help you if you don't tell me what you want to know. 🤷🏼‍♂️"
+      );
+      return;
+    }
+
+    // brian call
+    try {
+      await showKnowledgeBaseLoader(id);
+      console.log("calling brian with", BRIAN_MIDDLEWARE_BASE_URL, userPrompt);
+      const result = await fetch(
+        `${BRIAN_MIDDLEWARE_BASE_URL}/brian/knowledge-base`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prompt: userPrompt,
+          }),
+        }
+      );
+      const data = await result.json();
+      console.log("Brian response:", JSON.stringify(data));
+      // const data = {
+      //   status: "ok",
+      //   data: {
+      //     text: '"Overview"\n\nUniswap is a popular decentralized exchange protocol that enables users to swap various cryptocurrencies directly from their wallets without the need for intermediaries like traditional exchanges. It is built on the Ethereum blockchain and uses an automated market maker mechanism to facilitate trading. Uniswap has gained significant traction in the decentralized finance (DeFi) space due to its efficiency, transparency, and accessibility.\n\n"The Uniswap Protocol"\n\nThe Uniswap protocol consists of smart contracts deployed on the Ethereum blockchain that govern the exchange functions. These smart contracts are responsible for maintaining liquidity pools, determining exchange rates, and executing trades. Users interact with the protocol through decentralized applications (DApps) or interfaces that connect to the Uniswap smart contracts. The protocol is open-source, meaning that anyone can inspect the code, propose improvements, or create derivatives based on it.\n\n"Swaps"\n\nSwaps are the core feature of Uniswap and refer to the act of exchanging one cryptocurrency for another directly on the platform. Uniswap uses an automated market maker (AMM) model, specifically the constant product formula, to determine exchange rates based on the ratio of assets in a liquidity pool. This model eliminates the need for order books and counterparty risk, offering users fast and seamless trading experiences. Swaps on Uniswap can be executed with minimal slippage, making it an attractive option for traders seeking liquidity and competitive rates.\n\n"Glossary"\n\n- Liquidity Pools: Liquidity pools are pools of tokens locked in smart contracts that enable users to trade without relying on traditional order books. Liquidity providers contribute assets to these pools and earn fees based on their share of the pool\'s total liquidity.\n- Automated Market Maker (AMM): An automated market maker is a type of algorithmic trading system that determines asset prices based on predefined mathematical formulas. Uniswap uses an AMM model to facilitate trades and provide liquidity to users.\n- Smart Contracts: Smart contracts are self-executing contracts with predefined rules written in code. In the context of Uniswap, smart contracts govern the exchange functions, ensuring that trades are executed accurately and securely.\n\nIn conclusion, Uniswap is a decentralized exchange protocol that leverages smart contracts and an automated market maker mechanism to enable efficient and trustless cryptocurrency trading. By eliminating intermediaries and offering a transparent and user-friendly trading experience, Uniswap has become a cornerstone of the DeFi ecosystem."',
+      //     sourceDocuments: [
+      //       {
+      //         pageContent: "Overview | Uniswap",
+      //         metadata: {
+      //           description: "Code",
+      //           language: "en",
+      //           source: "https://docs.uniswap.org/concepts/governance/overview",
+      //           title: "Overview | Uniswap",
+      //         },
+      //       },
+      //       {
+      //         pageContent: "The Uniswap Protocol | Uniswap",
+      //         metadata: {
+      //           description: "Introduction",
+      //           language: "en",
+      //           source: "https://docs.uniswap.org/concepts/uniswap-protocol",
+      //           title: "The Uniswap Protocol | Uniswap",
+      //         },
+      //       },
+      //       {
+      //         pageContent: "Swaps | Uniswap",
+      //         metadata: {
+      //           description: "Introduction",
+      //           language: "en",
+      //           source: "https://docs.uniswap.org/concepts/protocol/swaps",
+      //           title: "Swaps | Uniswap",
+      //         },
+      //       },
+      //       {
+      //         pageContent: "Glossary | Uniswap",
+      //         metadata: {
+      //           description: "Automated Market Maker",
+      //           language: "en",
+      //           source: "https://docs.uniswap.org/concepts/glossary",
+      //           title: "Glossary | Uniswap",
+      //         },
+      //       },
+      //     ],
+      //   },
+      // };
+      await showKnowledgeBaseResult(id, data.data);
     } catch (error) {
       console.error("Brian error:", error);
       await showErrorResult(id, "Brian error");

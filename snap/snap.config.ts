@@ -17,6 +17,7 @@ const config: SnapConfig = {
   },
   environment: {
     BRIAN_MIDDLEWARE_BASE_URL: process.env.BRIAN_MIDDLEWARE_BASE_URL,
+    FRONTEND_BASE_URL: process.env.FRONTEND_BASE_URL,
   },
 };
 
