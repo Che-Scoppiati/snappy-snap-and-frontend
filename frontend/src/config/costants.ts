@@ -18,6 +18,7 @@ import {
   goerli,
   holesky,
   Chain,
+  lineaSepolia,
 } from "wagmi/chains";
 
 let customMainnet: Chain = {
@@ -130,6 +131,17 @@ let customHolesky: Chain = {
   },
 };
 
+let customLineaSepolia: Chain = {
+  ...lineaSepolia,
+  blockExplorers: {
+    default: {
+      name: "blockscout",
+      url: "https://explorer.sepolia.linea.build",
+      apiUrl: "https://explorer.sepolia.linea.build/api/v2",
+    },
+  },
+};
+
 const chains = [
   customMainnet,
   customPolygon,
@@ -148,6 +160,7 @@ const chains = [
   taikoKatla,
   goerli,
   customHolesky,
+  customLineaSepolia,
 ] as const;
 
 export const getChainById = (id: number | undefined) => {

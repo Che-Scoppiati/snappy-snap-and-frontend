@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import {
+  useAccount,
   useSendTransaction,
   useWaitForTransactionReceipt,
   useWriteContract,
@@ -35,11 +36,14 @@ const BACKEND_URL = process.env.BACKEND_URL;
 
 export default function Tx() {
   const [txMetadata, setTxMetadata] = useState<Metadata | null>(null);
+  const account = useAccount();
   const {
     data: hashMint,
     isPending: isPendingMint,
     writeContract,
+    error: errorMint,
   } = useWriteContract();
+  errorMint && console.log("error mint", errorMint);
 
   const { transactionId } = useParams();
 
@@ -70,16 +74,16 @@ export default function Tx() {
 
   const mintNft = async () => {
     // get a random uint tokenId from 2 to 100
-    const tokenId = 2; //Math.floor(Math.random() * 99) + 2;
+    const tokenId = Math.floor(Math.random() * 99) + 2;
     console.log("minting nft", tokenId);
     try {
       writeContract({
-        address: "0x832b4559C11D871f7760E4eE0bD22588bC014555", // linea sepolia nft
-        // address: "0x186cF0F23aC8f308B7549F8Bf7e75Fd58e2BDfA7", // linea mainnet nft
+        address: "0x0d677fd109a1be0f32028c43aea4a1481a015402", // linea sepolia nft
+        // address: "0xe9c31ab9a6dbd39aad1bd82d3713084742e38197", // linea mainnet nft
         abi: abiNftLinea,
         functionName: "safeMint",
         args: [
-          "0x699d04F9994f181F3E310F70cF6aC8E8445aCe9A" as `0x${string}`,
+          account.address,
           BigInt(tokenId),
           "https://ipfs.io/ipfs/Qmbks95fQRb3zsnsWSHVFAHd6iLBGuM8otSJyVjzXLBNgM",
         ],
