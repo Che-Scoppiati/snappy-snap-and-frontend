@@ -49,7 +49,7 @@ body {
 }
 
 .background--custom {
-  background: linear-gradient(90deg, #252525, #00384d, #330026);
+  background: linear-gradient(130deg, #252525, #00384d, #330026);
   background-size: 300% 300%;
   animation: gradient 4s alternate infinite;
   position: absolute;
@@ -68,5 +68,9 @@ body {
 }
 
 .btn {
-  @apply min-h-0 h-auto px-4 py-3 leading-none;
+  @apply min-h-0 h-auto px-4 py-3 leading-none text-xl pb-[0.5rem];
+}
+
+.link {
+  @apply hover:no-underline;
 }
