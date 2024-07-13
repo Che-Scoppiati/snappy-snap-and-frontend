@@ -1,11 +1,14 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { parseEther } from "viem";
 import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { TransactionData } from "@brian-ai/sdk";
+import Image from "next/image";
+import { TokenDetails } from "@/components/TokenDetails";
+import { FaArrowRightLong } from "react-icons/fa6";
+import { parseEther } from "viem";
 
 interface Metadata {
   action: string;
@@ -13,8 +16,7 @@ interface Metadata {
   solver: string;
   type: string;
 }
-
-export interface TxResult {
+export interface GetTxResult {
   id: string;
   metadata: Metadata;
   fromAddress: string;
@@ -22,7 +24,7 @@ export interface TxResult {
 }
 
 export default function Tx() {
-  const [txData, setTxData] = useState<TxResult | null>(null);
+  const [txMetadata, setTxMetadata] = useState<Metadata | null>(null);
 
   const { transactionId } = useParams();
 
@@ -30,7 +32,8 @@ export default function Tx() {
     const data = await axios
       .get(`http://localhost:8099/tx/${transactionId}`)
       .then((res) => res.data);
-    setTxData(data.data);
+    const getTxResult: GetTxResult = data.data;
+    setTxMetadata(getTxResult.metadata);
   };
 
   const { sendTransaction, isPending, data: hash } = useSendTransaction();
@@ -43,13 +46,46 @@ export default function Tx() {
     getTxData();
   }, []);
 
-  return (
-    <div className="flex flex-col gap-6 items-center">
-      <div className="flex flex-col">
-        <div>
-          <span>{txData?.metadata.data.description}</span>
+  return txMetadata ? (
+    <div className="flex flex-col gap-16 items-center w-[60rem] glass rounded-[2.5rem] p-10">
+      {/* HEADER */}
+      <div className="flex w-full justify-between">
+        <span className="text-5xl">
+          {txMetadata?.action.charAt(0).toUpperCase() +
+            txMetadata?.action.slice(1)}
+        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-lg leading-none text-zinc-300">Solver</span>
+          <div className="flex gap-2">
+            <span className="text-2xl leading-none mt-[0.1rem]">
+              {txMetadata?.solver}
+            </span>
+            <Image
+              src={`/images/${txMetadata?.solver}_logo.png`}
+              alt={`${txMetadata?.solver} Logo`}
+              width={30}
+              height={30}
+              className="w-6 h-6"
+            />
+          </div>
         </div>
       </div>
+
+      {/* DETAILS */}
+      <div className="grid grid-cols-[40%_20%_40%] gap-0 justify-items-center items-center w-full">
+        <TokenDetails
+          token={txMetadata?.data.fromToken}
+          amount={txMetadata.data.fromAmount}
+        />
+        <div className="col-span-1 w-fit">
+          <FaArrowRightLong color="white" className="w-[60px] h-[60px]" />
+        </div>
+        <TokenDetails
+          token={txMetadata?.data.toToken}
+          amount={txMetadata.data.toAmount}
+        />
+      </div>
+
       <button
         className="btn btn-accent"
         onClick={() =>
@@ -59,7 +95,7 @@ export default function Tx() {
           })
         }
       >
-        <span className="text-xl">Send ETH</span>
+        <span className="text-xl">Confirm</span>
         {(isPending || isConfirming) && (
           <span className="loading loading-spinner loading-xs mb-1" />
         )}
@@ -76,5 +112,7 @@ export default function Tx() {
         </span>
       )}
     </div>
+  ) : (
+    <div>Loading...</div>
   );
 }

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import { TxResult } from "../tx/[transactionId]/page";
+import { GetTxResult } from "../tx/[transactionId]/page";
 
 const DashboardPage = () => {
-  const [transactions, setTransactions] = useState<TxResult[]>([]);
+  const [transactions, setTransactions] = useState<GetTxResult[]>([]);
   const account = useAccount();
   const baseBlockscout = "https://eth-sepolia.blockscout.com";
   console.log("chain", account.chain);
