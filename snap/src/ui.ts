@@ -6,6 +6,8 @@ import {
   input,
   text,
   copyable,
+  divider,
+  spinner,
 } from "@metamask/snaps-sdk";
 
 /**
@@ -32,12 +34,12 @@ export async function createTransactionInterface(id: string) {
     params: {
       id,
       ui: panel([
-        heading("🔒 Transaction! "),
+        heading("What do you want to do? 🧙🏼‍♂️"),
         text(
           "Let me create a transaction for you. Type below the transaction you want to do."
         ),
         form({
-          name: "store-form",
+          name: "transaction-form",
           children: [
             input({
               label: "Prompt",
@@ -50,6 +52,56 @@ export async function createTransactionInterface(id: string) {
             }),
           ],
         }),
+        divider(),
+        heading("Here are some examples:"),
+        text("Transfer 1 ETH to itsmide.eth"),
+        text("Swap 1 ETH to USDC"),
+      ]),
+    },
+  });
+}
+
+export async function showTransactionGenerationLoader(id: string) {
+  await snap.request({
+    method: "snap_updateInterface",
+    params: {
+      id,
+      ui: panel([
+        heading("Generating a new transaction... 🧠"),
+        text(
+          "Please wait. This should only take a few seconds. I'm thinking..."
+        ),
+        spinner(),
+      ]),
+    },
+  });
+}
+
+export async function showTransactionResult(
+  id: string,
+  link: string,
+  description: string
+) {
+  // Define the dimensions of the popup window
+  // const width = 600;
+  // const height = 400;
+
+  // // Calculate the position of the popup to center it on the screen
+  // const left = screen.width / 2 - width / 2;
+  // const top = screen.height / 2 - height / 2;
+
+  // const url = `${link}?width=${width},height=${height},top=${top},left=${left}`;
+
+  await snap.request({
+    method: "snap_updateInterface",
+    params: {
+      id,
+      ui: panel([
+        heading("🔒 Okay, your transaction is ready! "),
+        text(description),
+        divider(),
+        text("Please click the button below to proceed."),
+        text(`[Fire Transaction 🔥](${link + "?test=2"})`),
       ]),
     },
   });
