@@ -16,6 +16,22 @@
   }
 }
 
+@layer base {
+  @font-face {
+    font-family: "Varuna";
+    font-style: normal;
+    font-weight: 400;
+    src:
+      local(""),
+      url("https://fonts.cdnfonts.com/s/107546/varuna-personal-use-only.woff")
+        format("woff");
+  }
+}
+
+html {
+  font-family: "Varuna", sans-serif;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
@@ -30,4 +46,27 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+.background--custom {
+  background: linear-gradient(90deg, #252525, #00384d, #330026);
+  background-size: 300% 300%;
+  animation: gradient 4s alternate infinite;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+@keyframes gradient {
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 100%;
+  }
+}
+
+.btn {
+  @apply min-h-0 h-auto px-4 py-3 leading-none;
 }

@@ -1,8 +1,15 @@
+"use client";
+
+import { Header } from "@/components/Header";
+import { useRequestSnap } from "@/hooks/useRequestSnap";
+
 export default function Tx() {
+  const requestSnap = useRequestSnap();
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      Tx page :)
-      <w3m-button />
-    </main>
+    <>
+      <button className="btn" onClick={requestSnap}>
+        Request Snap
+      </button>
+    </>
   );
 }

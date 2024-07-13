@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { cookieToInitialState } from "wagmi";
 import { headers } from "next/headers";
 import { config } from "@/config";
 import Web3ModalProvider from "@/context";
-
-const inter = Inter({ subsets: ["latin"] });
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -21,9 +20,15 @@ export default function RootLayout({
   const initialState = cookieToInitialState(config, headers().get("cookie"));
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`background--custom min-h-screen`}>
         <Web3ModalProvider initialState={initialState}>
-          {children}
+          <main className="flex flex-col justify-between p-6 h-full">
+            <div className="flex flex-col items-center gap-12">
+              <Header />
+              {children}
+            </div>
+            <Footer />
+          </main>
         </Web3ModalProvider>
       </body>
     </html>
