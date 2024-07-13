@@ -14,9 +14,10 @@ interface Metadata {
   type: string;
 }
 
-interface TxResult {
+export interface TxResult {
   id: string;
   metadata: Metadata;
+  fromAddress: string;
   txHash: string | null;
 }
 

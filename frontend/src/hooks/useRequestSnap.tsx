@@ -12,7 +12,6 @@ export const useRequestSnap = () => {
           },
         },
       });
-      console.log(test);
     }
   };
 
