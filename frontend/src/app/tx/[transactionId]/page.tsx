@@ -19,6 +19,7 @@ import { abiNftLinea } from "./nft-abi-linea";
 import { walletConnectProvider } from "@/context";
 import { getExplorerUrlByChainId } from "@/config/costants";
 import confetti from "canvas-confetti";
+import { useWeb3Modal } from "@web3modal/wagmi/react";
 
 interface Metadata {
   action: string;
@@ -26,17 +27,19 @@ interface Metadata {
   solver: string;
   type: string;
 }
+
 export interface GetTxResult {
   id: string;
   metadata: Metadata;
   fromAddress: string;
   txHash: string | null;
 }
-const BACKEND_URL = process.env.BACKEND_URL;
 
 export default function Tx() {
   const [txMetadata, setTxMetadata] = useState<Metadata | null>(null);
-  const account = useAccount();
+  const { address, status } = useAccount();
+  const [askedToConnect, setAskedToConnect] = useState(false);
+
   const {
     data: hashMint,
     isPending: isPendingMint,
@@ -83,7 +86,7 @@ export default function Tx() {
         abi: abiNftLinea,
         functionName: "safeMint",
         args: [
-          account.address,
+          address,
           BigInt(tokenId),
           "https://ipfs.io/ipfs/Qmbks95fQRb3zsnsWSHVFAHd6iLBGuM8otSJyVjzXLBNgM",
         ],
@@ -116,6 +119,19 @@ export default function Tx() {
       });
     }
   }, [isConfirmed]);
+
+  const { open } = useWeb3Modal();
+
+  const isDisconnected = status === "disconnected";
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (isDisconnected && !askedToConnect) {
+        open();
+        setAskedToConnect(true);
+      }
+    }, 2000);
+  }, [isDisconnected]);
 
   return txMetadata ? (
     <div className="flex flex-col gap-12 items-center w-[60rem] glass rounded-[2.5rem] p-10">
@@ -175,10 +191,19 @@ export default function Tx() {
               ? switchChain({ chainId: txChainId })
               : sendTransaction(txMetadata.data.steps?.[0] as any);
           }}
-          disabled={isSwitchChainPending || isTxPending || isConfirming}
+          disabled={
+            isDisconnected ||
+            isSwitchChainPending ||
+            isTxPending ||
+            isConfirming
+          }
         >
           <span className="text-xl">
-            {wrongChain ? "Switch Chain" : "Confirm"}
+            {isDisconnected
+              ? "Connect Wallet"
+              : wrongChain
+                ? "Switch Chain"
+                : "Confirm"}
           </span>
           {(isTxPending || isConfirming) && (
             <span className="loading loading-spinner loading-xs" />
@@ -196,28 +221,34 @@ export default function Tx() {
           </span>
         </div>
       )}
-      <div className="flex flex-col gap-4 items-center">
-        <h1 className="text-2xl">
-          Now you are an OG user of Snappy with Brian
-        </h1>
-        <button className="btn btn-accent" onClick={mintNft}>
-          {isPendingMint || isConfirmingMint ? "Minting..." : "Mint your NFT"}
-        </button>
-        {hashMint}
-        {isConfirmedMint && (
-          <div className="flex flex-col gap-4 items-center">
-            <span className="icon icon-check text-2xl">
-              NFT Minted! Go to{" "}
-              <a
-                href={`https://explorer.sepolia.linea.build/tx/${hashMint}`}
-                target="_blank"
-              >
-                Blockscout
-              </a>
-            </span>
-          </div>
-        )}
-      </div>
+      {isConfirmed && (
+        <div className="flex flex-col gap-4 items-center">
+          {!isConfirmedMint && (
+            <>
+              <h1 className="text-2xl">
+                Now you are an OG user of Snappy with Brian
+              </h1>
+              <button className="btn btn-accent" onClick={mintNft}>
+                <span className="text-xl">Mint your NFT</span>
+                {(isPendingMint || isConfirmingMint) && (
+                  <span className="loading loading-spinner loading-xs" />
+                )}
+              </button>
+            </>
+          )}
+          {isConfirmedMint && (
+            <div className="flex flex-col gap-4 items-center">
+              <span className="icon icon-check text-2xl">
+                NFT{" "}
+                <a href={`${explorerUrl}/tx/${hashMint}`} target="_blank">
+                  Minted
+                </a>
+                !
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   ) : (
     <span className="loading loading-spinner loading-lg" />

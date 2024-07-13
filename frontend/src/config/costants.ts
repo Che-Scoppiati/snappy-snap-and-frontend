@@ -178,4 +178,42 @@ export const getExplorerUrlByChainId = (id: number | undefined) => {
   return chain?.blockExplorers?.default.url;
 };
 
+export const logos: { [key: number]: string } = {
+  [customMainnet.id]:
+    "https://assets.coingecko.com/asset_platforms/images/279/standard/ethereum.png",
+  [customPolygon.id]:
+    "https://assets.coingecko.com/asset_platforms/images/15/standard/polygon_pos.png",
+  [scroll.id]:
+    "https://assets.coingecko.com/asset_platforms/images/153/standard/scroll.jpeg",
+  [customArbitrum.id]:
+    "https://s2.coinmarketcap.com/static/img/coins/64x64/11841.png",
+  [customOptimism.id]:
+    "https://assets.coingecko.com/asset_platforms/images/41/standard/optimism.png",
+  [customGnosis.id]:
+    "https://assets.coingecko.com/asset_platforms/images/11062/standard/Aatar_green_white.png",
+  [customLinea.id]:
+    "https://assets.coingecko.com/asset_platforms/images/135/standard/linea.jpeg",
+  [customBase.id]:
+    "https://assets.coingecko.com/asset_platforms/images/131/standard/base-network.png",
+  [customZkSync.id]:
+    "https://assets.coingecko.com/asset_platforms/images/121/standard/zksync.jpeg",
+  [customAurora.id]:
+    "https://assets.coingecko.com/asset_platforms/images/53/standard/Aurora-logo-token-darkBG.png",
+  [fantom.id]:
+    "https://assets.coingecko.com/coins/images/4001/standard/Fantom_round.png",
+  [avalanche.id]:
+    "https://assets.coingecko.com/asset_platforms/images/12/standard/avalanche.png",
+  [bsc.id]:
+    "https://assets.coingecko.com/asset_platforms/images/1/standard/bnb_smart_chain.png",
+  [okc.id]: "https://s2.coinmarketcap.com/static/img/coins/64x64/3897.png",
+  [taikoKatla.id]:
+    "https://assets.coingecko.com/coins/images/38058/standard/icon.png",
+  [goerli.id]:
+    "https://assets.coingecko.com/coins/images/29217/standard/goerli-eth.png",
+  [customHolesky.id]:
+    "https://assets.coingecko.com/asset_platforms/images/279/standard/ethereum.png",
+  [customLineaSepolia.id]:
+    "https://assets.coingecko.com/asset_platforms/images/135/standard/linea.jpeg",
+};
+
 export { chains };

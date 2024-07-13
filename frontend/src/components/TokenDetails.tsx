@@ -53,7 +53,7 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({
         <img
           src={token?.logoURI || ""}
           alt="Token Logo"
-          className="w-[90px] h-[90px]"
+          className="w-[90px] h-[90px] rounded-full"
         />
         <div className="flex flex-col">
           <span className="text-3xl font-bold">
