@@ -1,8 +1,6 @@
 import {
   panel,
   text,
-  heading,
-  copyable,
   UserInputEventType,
   OnHomePageHandler,
   OnRpcRequestHandler,
@@ -266,27 +264,3 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
     }
   }
 };
-
-// const openPopup = (url: string) => {
-//   // Define the dimensions of the popup window
-//   const width = 600;
-//   const height = 400;
-
-//   // Calculate the position of the popup to center it on the screen
-//   const left = screen.width / 2 - width / 2;
-//   const top = screen.height / 2 - height / 2;
-
-//   console.log("Opening popup window with dimensions:", {
-//     width,
-//     height,
-//     top,
-//     left,
-//   });
-
-//   // Open the popup window with the specified dimensions and position
-//   window.open(
-//     url,
-//     "_blank",
-//     `width=${width},height=${height},top=${top},left=${left}`
-//   );
-// };
