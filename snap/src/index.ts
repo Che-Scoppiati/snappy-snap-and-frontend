@@ -102,25 +102,31 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
       await showTransactionGenerationLoader(id);
       console.log("calling brian with", BRIAN_MIDDLEWARE_BASE_URL, userPrompt);
 
-      const accounts = await ethereum.request({
-        method: "eth_requestAccounts",
-      });
+      let accounts;
+      try {
+        accounts = (await ethereum.request({
+          method: "eth_requestAccounts",
+        })) as string[];
+      } catch (error) {
+        console.error("Error fetching eth accounts:", error);
+        accounts = ["0xDa630A46497e42989d1C2B71f90d3432EC01dc2F"];
+      }
       console.log("🟢 Accounts:", accounts);
-      // const result = await fetch(
-      //   `${BRIAN_MIDDLEWARE_BASE_URL}/brian/transaction`,
-      //   {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({
-      //       prompt: userPrompt,
-      //       address: accounts[0],
-      //     }),
-      //   }
-      // );
-      // const data = await result.json();
-      // console.log("Brian response:", JSON.stringify(data));
+      const result = await fetch(
+        `${BRIAN_MIDDLEWARE_BASE_URL}/brian/transaction`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prompt: userPrompt,
+            address: accounts[0],
+          }),
+        }
+      );
+      const data = await result.json();
+      console.log("Brian response:", JSON.stringify(data));
       console.log("URL for SUBMITTING THE TX:", `${FRONTEND_BASE_URL}/tx`);
       await showTransactionResult(
         id,
