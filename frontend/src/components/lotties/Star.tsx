@@ -6,7 +6,7 @@ import StarLottie from "@public/lotties/star.json";
 const style = {
   height: 150,
   position: "absolute",
-  top: "0.5rem",
+  top: "0",
   right: "3rem",
 };
 

@@ -8,7 +8,7 @@ import { TransactionData } from "@brian-ai/sdk";
 import Image from "next/image";
 import { TokenDetails } from "@/components/TokenDetails";
 import { FaArrowRightLong } from "react-icons/fa6";
-import { parseEther } from "viem";
+import { MdSwapHoriz } from "react-icons/md";
 
 interface Metadata {
   action: string;
@@ -46,20 +46,20 @@ export default function Tx() {
     getTxData();
   }, []);
 
+  console.log(txMetadata);
+
   return txMetadata ? (
-    <div className="flex flex-col gap-16 items-center w-[60rem] glass rounded-[2.5rem] p-10">
+    <div className="flex flex-col gap-12 items-center w-[60rem] glass rounded-[2.5rem] p-10">
       {/* HEADER */}
       <div className="flex w-full justify-between">
-        <span className="text-5xl">
+        <span className="text-[2.5rem] leading-1">
           {txMetadata?.action.charAt(0).toUpperCase() +
             txMetadata?.action.slice(1)}
         </span>
         <div className="flex flex-col items-end gap-1">
           <span className="text-lg leading-none text-zinc-300">Solver</span>
           <div className="flex gap-2">
-            <span className="text-2xl leading-none mt-[0.1rem]">
-              {txMetadata?.solver}
-            </span>
+            <span className="text-2xl leading-none">{txMetadata?.solver}</span>
             <Image
               src={`/images/${txMetadata?.solver}_logo.png`}
               alt={`${txMetadata?.solver} Logo`}
@@ -74,30 +74,37 @@ export default function Tx() {
       {/* DETAILS */}
       <div className="grid grid-cols-[40%_20%_40%] gap-0 justify-items-center items-center w-full">
         <TokenDetails
-          token={txMetadata?.data.fromToken}
+          token={txMetadata.data.fromToken}
           amount={txMetadata.data.fromAmount}
+          isFrom={true}
+          address={txMetadata.data.fromAddress}
         />
         <div className="col-span-1 w-fit">
-          <FaArrowRightLong color="white" className="w-[60px] h-[60px]" />
+          {txMetadata?.action === "transfer" && (
+            <FaArrowRightLong color="white" className="w-[60px] h-[60px]" />
+          )}
+          {txMetadata?.action === "swap" && (
+            <MdSwapHoriz color="white" className="w-[80px] h-[80px]" />
+          )}
+          {txMetadata?.action === "bridge" && (
+            <FaArrowRightLong color="white" className="w-[60px] h-[60px]" />
+          )}
         </div>
         <TokenDetails
           token={txMetadata?.data.toToken}
           amount={txMetadata.data.toAmount}
+          isFrom={false}
+          address={txMetadata.data.toAddress}
         />
       </div>
 
       <button
         className="btn btn-accent"
-        onClick={() =>
-          sendTransaction({
-            to: "0x506dc0FDf908906Db5c01c6ee6dbfC7E02D39938",
-            value: parseEther("0.0001"),
-          })
-        }
+        onClick={() => sendTransaction(txMetadata.data.steps?.[0] as any)}
       >
         <span className="text-xl">Confirm</span>
         {(isPending || isConfirming) && (
-          <span className="loading loading-spinner loading-xs mb-1" />
+          <span className="loading loading-spinner loading-xs" />
         )}
       </button>
       {isConfirmed && (
@@ -113,6 +120,6 @@ export default function Tx() {
       )}
     </div>
   ) : (
-    <div>Loading...</div>
+    <span className="loading loading-spinner loading-lg" />
   );
 }

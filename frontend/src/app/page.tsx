@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <div className="flex flex-col w-full">
       {/* Do anything inside Metamask */}
-      <div className="flex flex-col gap-8 items-center px-24 py-14 w-fit m-auto glass rounded-3xl glass:border-8">
+      <div className="flex flex-col gap-8 items-center px-24 py-12 w-fit m-auto glass rounded-3xl glass:border-8">
         <div className="flex gap-4">
           <h2 className="text-6xl font-['Reverie'] mr-[4.75rem]">
             Do <span className="font-black underline">anything</span> inside

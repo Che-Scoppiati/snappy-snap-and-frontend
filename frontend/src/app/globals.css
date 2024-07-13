@@ -29,6 +29,16 @@
   }
 
   @font-face {
+    font-family: "Urbanist";
+    font-style: normal;
+    font-weight: 400;
+    src:
+      local("Urbanist"),
+      url("https://fonts.cdnfonts.com/s/107254/Urbanist[wght].woff")
+        format("woff");
+  }
+
+  @font-face {
     font-family: "Reverie";
     font-style: normal;
     font-weight: 400;
@@ -40,7 +50,7 @@
 }
 
 html {
-  font-family: "Varuna", sans-serif;
+  font-family: "Urbanist", sans-serif;
 }
 
 body {
@@ -79,7 +89,7 @@ body {
 }
 
 .btn {
-  @apply min-h-0 h-auto px-4 py-3 leading-none text-xl pb-[0.5rem];
+  @apply min-h-0 h-auto px-4 py-2 leading-none text-xl;
 }
 
 .link {
