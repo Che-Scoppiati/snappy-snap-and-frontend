@@ -13,8 +13,28 @@ export default function Tx() {
       hash,
     });
 
+  const openPopup = () => {
+    // Define the URL you want to open
+    const url = "https://www.example.com";
+
+    // Define the dimensions of the popup window
+    const width = 600;
+    const height = 400;
+
+    // Calculate the position of the popup to center it on the screen
+    const left = screen.width / 2 - width / 2;
+    const top = screen.height / 2 - height / 2;
+
+    // Open the popup window with the specified dimensions and position
+    window.open(
+      url,
+      "_blank",
+      `width=${width},height=${height},top=${top},left=${left}`,
+    );
+  };
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 items-center">
       <div className="flex gap-6">
         <button className="btn btn-accent" onClick={requestSnap}>
           Request Snap
@@ -28,18 +48,20 @@ export default function Tx() {
             })
           }
         >
-          <span className="text-xl">Confirm</span>
+          <span className="text-xl">Send ETH</span>
           {(isPending || isConfirming) && (
-            <span className="loading loading-spinner loading-xs"></span>
+            <span className="loading loading-spinner loading-xs mb-1" />
           )}
+        </button>
+        <button className="btn btn-accent" onClick={openPopup}>
+          Open Popup
         </button>
       </div>
       {isConfirmed && (
-        <span className="icon icon-check">
+        <span className="icon icon-check text-2xl">
           Transaction Confirmed! Go to{" "}
           <a
             href={`https://explorer.sepolia.linea.build/tx/${hash}`}
-            className="link"
             target="_blank"
           >
             Blockscout
