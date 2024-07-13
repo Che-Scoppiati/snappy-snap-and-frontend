@@ -23,7 +23,7 @@ export default function RootLayout({
       <body className={`background--custom min-h-screen`}>
         <Web3ModalProvider initialState={initialState}>
           <main className="flex flex-col justify-between p-6 h-full">
-            <div className="flex flex-col items-center gap-12">
+            <div className="flex flex-col items-center gap-14">
               <Header />
               {children}
             </div>
