@@ -35,7 +35,7 @@ const DashboardPage = () => {
     <div className="flex flex-col text-white">
       <h1>Dashboard</h1>
       <section className="">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto h-[60vh]">
           <table className="table">
             {/* head */}
             <thead>
