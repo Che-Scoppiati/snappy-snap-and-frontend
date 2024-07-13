@@ -32,7 +32,6 @@ export interface GetTxResult {
   fromAddress: string;
   txHash: string | null;
 }
-const BACKEND_URL = process.env.BACKEND_URL;
 
 export default function Tx() {
   const [txMetadata, setTxMetadata] = useState<Metadata | null>(null);
