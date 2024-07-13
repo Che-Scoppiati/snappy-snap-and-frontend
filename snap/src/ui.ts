@@ -32,6 +32,27 @@ export async function createMenuInterface(): Promise<string> {
   });
 }
 
+export async function createPreTransactionInterface(id: string) {
+  await snap.request({
+    method: "snap_updateInterface",
+    params: {
+      id,
+      ui: panel([
+        heading("Hey mate, do this before continue 😅"),
+        text(
+          "Before proceeding with the **transaction** feature, please **connect your wallet**, so I know who is performing transactions."
+        ),
+        divider(),
+        text(
+          "You only need to do this **once** for the current account. After the connection, reopen the snap and proceed with the transaction."
+        ),
+        text("Click the button below to connect your wallet 👇"),
+        button({ value: "Connect", name: "connect-wallet" }),
+      ]),
+    },
+  });
+}
+
 export async function createTransactionInterface(id: string) {
   await snap.request({
     method: "snap_updateInterface",
@@ -165,16 +186,6 @@ export async function showTransactionResult(
   link: string,
   description: string
 ) {
-  // Define the dimensions of the popup window
-  // const width = 600;
-  // const height = 400;
-
-  // // Calculate the position of the popup to center it on the screen
-  // const left = screen.width / 2 - width / 2;
-  // const top = screen.height / 2 - height / 2;
-
-  // const url = `${link}?width=${width},height=${height},top=${top},left=${left}`;
-
   await snap.request({
     method: "snap_updateInterface",
     params: {
@@ -188,6 +199,19 @@ export async function showTransactionResult(
       ]),
     },
   });
+  // await snap.request({
+  //   method: "snap_dialog",
+  //   params: {
+  //     type: "confirmation",
+  //     content: panel([
+  //       heading("🔒 Okay, your transaction is ready! "),
+  //       text(description),
+  //       divider(),
+  //       text("Please click the button below to proceed."),
+  //       text(`[Fire Transaction 🔥](${link})`),
+  //     ]),
+  //   },
+  // });
 }
 
 /**
@@ -195,18 +219,35 @@ export async function showTransactionResult(
  * @param id - the interface ID
  * @param errorMessage - the error message to display
  */
-export async function showErrorResult(id: string, errorMessage: string) {
-  await snap.request({
-    method: "snap_updateInterface",
-    params: {
-      id,
-      ui: panel([
-        heading("❌ Oops, Something went wrong! ❌"),
-        text("An error happened. The error message log is:"),
-        copyable(errorMessage),
-      ]),
-    },
-  });
+export async function showErrorResult(
+  id: string,
+  errorMessage: string,
+  newId: boolean = false
+) {
+  if (newId) {
+    await snap.request({
+      method: "snap_createInterface",
+      params: {
+        ui: panel([
+          heading("❌ Oops, Something went wrong! ❌"),
+          text("An error happened. The error message log is:"),
+          copyable(errorMessage),
+        ]),
+      },
+    });
+  } else {
+    await snap.request({
+      method: "snap_updateInterface",
+      params: {
+        id,
+        ui: panel([
+          heading("❌ Oops, Something went wrong! ❌"),
+          text("An error happened. The error message log is:"),
+          copyable(errorMessage),
+        ]),
+      },
+    });
+  }
 }
 
 /**

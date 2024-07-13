@@ -11,6 +11,7 @@ import {
 import {
   createKnowledgeBaseInterface,
   createMenuInterface,
+  createPreTransactionInterface,
   createTransactionInterface,
   showErrorResult,
   showKnowledgeBaseLoader,
@@ -68,7 +69,18 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
   if (event.type === UserInputEventType.ButtonClickEvent) {
     switch (event.name) {
       case "transaction":
-        await createTransactionInterface(id);
+        // check if the user has already connected the current account
+        console.log("get snap state");
+        const snapState = await snap.request({
+          method: "snap_manageState",
+          params: { operation: "get" },
+        });
+        console.log("snap state", snapState);
+        if (snapState && snapState.alreadyConnected) {
+          await createTransactionInterface(id);
+        } else {
+          await createPreTransactionInterface(id);
+        }
         break;
       case "knowledge-base":
         console.log("Knowledge base clicked 🟡");
@@ -83,12 +95,38 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
     }
   }
 
+  if (
+    event.type === UserInputEventType.ButtonClickEvent &&
+    event.name === "connect-wallet"
+  ) {
+    console.log("Connection form submitted 🔵");
+
+    try {
+      const accounts = (await ethereum.request({
+        method: "eth_requestAccounts",
+      })) as string[];
+      console.log("🟢 Accounts:", accounts);
+      await snap.request({
+        method: "snap_manageState",
+        params: {
+          operation: "update",
+          newState: { alreadyConnected: true },
+        },
+      });
+      await createTransactionInterface(id);
+    } catch (error) {
+      console.error("Connection error:", error);
+      await showErrorResult(id, "Connection error");
+    }
+  }
+
   /** Handle Transaction Form */
   if (
     event.type === UserInputEventType.FormSubmitEvent &&
     event.name === "transaction-form"
   ) {
     console.log("Transaction form submitted 🔵");
+
     const { "user-prompt": userPrompt } = event.value;
 
     if (!userPrompt) {
@@ -102,15 +140,10 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
       await showTransactionGenerationLoader(id);
       console.log("calling brian with", BRIAN_MIDDLEWARE_BASE_URL, userPrompt);
 
-      let accounts;
-      try {
-        accounts = (await ethereum.request({
-          method: "eth_requestAccounts",
-        })) as string[];
-      } catch (error) {
-        console.error("Error fetching eth accounts:", error);
-        accounts = ["0xDa630A46497e42989d1C2B71f90d3432EC01dc2F"];
-      }
+      const accounts = (await ethereum.request({
+        method: "eth_requestAccounts",
+      })) as string[];
+
       console.log("🟢 Accounts:", accounts);
       const result = await fetch(
         `${BRIAN_MIDDLEWARE_BASE_URL}/brian/transaction`,
@@ -126,17 +159,24 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
         }
       );
       const data = await result.json();
+      if (data.status !== "ok") {
+        console.error("Brian error:", data);
+        await showErrorResult(id, data.error.message, true);
+        return;
+      }
       console.log("Brian response:", JSON.stringify(data));
-      console.log("URL for SUBMITTING THE TX:", `${FRONTEND_BASE_URL}/tx`);
+      console.log(
+        "URL for SUBMITTING THE TX:",
+        `${FRONTEND_BASE_URL}/tx/${data.id}`
+      );
       await showTransactionResult(
         id,
-        `${FRONTEND_BASE_URL}/tx`,
-        // data.data[0].data.description
-        "Transaction generated"
+        `${FRONTEND_BASE_URL}/tx/${data.id}`,
+        data.data.data.description
       );
     } catch (error) {
       console.error("Brian error:", error);
-      await showErrorResult(id, "Brian error");
+      await showErrorResult(id, "Generic Transaction error");
     }
   }
 
