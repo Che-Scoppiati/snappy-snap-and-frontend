@@ -1,18 +1,54 @@
 "use client";
 
-import { useRequestSnap } from "@/hooks/useRequestSnap";
+import { useParams } from "next/navigation";
 import { parseEther } from "viem";
 import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { TransactionData } from "@brian-ai/sdk";
+
+interface Metadata {
+  action: string;
+  data: TransactionData;
+  solver: string;
+  type: string;
+}
+
+interface TxResult {
+  id: string;
+  metadata: Metadata;
+  txHash: string | null;
+}
 
 export default function Tx() {
+  const [txData, setTxData] = useState<TxResult | null>(null);
+
+  const { transactionId } = useParams();
+
+  const getTxData = async () => {
+    const data = await axios
+      .get(`http://localhost:8099/tx/${transactionId}`)
+      .then((res) => res.data);
+    setTxData(data.data);
+  };
+
   const { sendTransaction, isPending, data: hash } = useSendTransaction();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
       hash,
     });
 
+  useEffect(() => {
+    getTxData();
+  }, []);
+
   return (
     <div className="flex flex-col gap-6 items-center">
+      <div className="flex flex-col">
+        <div>
+          <span>{txData?.metadata.data.description}</span>
+        </div>
+      </div>
       <button
         className="btn btn-accent"
         onClick={() =>
