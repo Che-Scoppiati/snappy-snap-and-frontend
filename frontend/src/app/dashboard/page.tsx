@@ -7,6 +7,8 @@ import { TxResult } from "../tx/[transactionId]/page";
 const DashboardPage = () => {
   const [transactions, setTransactions] = useState<TxResult[]>([]);
   const account = useAccount();
+  const baseBlockscout = "https://eth-sepolia.blockscout.com";
+  console.log("chain", account.chain);
 
   useEffect(() => {
     async function fetchTransactions() {
@@ -26,7 +28,7 @@ const DashboardPage = () => {
             {/* head */}
             <thead>
               <tr>
-                <th>Transaction Id</th>
+                <th>Transaction Hash</th>
                 <th>Address</th>
                 <th>Link</th>
               </tr>
@@ -35,7 +37,13 @@ const DashboardPage = () => {
               {transactions
                 ? transactions.map((tx) => (
                     <tr key={tx.id}>
-                      <td className="font-bold">{tx.txHash}</td>
+                      <td className="font-bold">
+                        <a
+                          href={`${baseBlockscout}/address/0x76333b4B92Ca51b692FAB95Bf48A77d60681A965`}
+                        >
+                          {tx.txHash}
+                        </a>
+                      </td>
                       <td>{tx.fromAddress}</td>
                       <td>
                         <button className="btn btn-ghost btn-xs">
