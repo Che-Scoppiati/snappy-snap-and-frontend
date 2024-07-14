@@ -7,7 +7,7 @@ export const Header = () => {
       <div className="flex-1 gap-4 w-fit">
         <Image src="/images/circled.png" width={60} height={60} alt="logo" />
         <Link href="/" className="bg-none">
-          <h1 className="text-6xl mt-2 font-['Reverie']">Snappy</h1>
+          <h1 className="text-6xl mt-2 font-['Reverie']">SnappyAI</h1>
         </Link>
       </div>
       <div className="flex-none gap-6">

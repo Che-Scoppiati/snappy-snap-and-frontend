@@ -19,7 +19,7 @@ export default function Home() {
         </div>
 
         <span className="text-3xl">
-          Ask <span className="font-['Reverie']">Snappy</span> to seamlessly
+          Ask <span className="font-['Reverie']">SnappyAI</span> to seamlessly
           send funds, swap, bridge, and more.
         </span>
 

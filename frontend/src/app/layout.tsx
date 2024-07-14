@@ -8,7 +8,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Snappy",
+  title: "SnappyAI",
   description: "Your Web3 Companion",
 };
 

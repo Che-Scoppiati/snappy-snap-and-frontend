@@ -43,6 +43,12 @@ export interface GetTxResult {
   txHash: string | null;
 }
 
+function extractENSDomain(input: string): string | null {
+  const regex = /\b\w+\.eth\b/;
+  const match = input.match(regex);
+  return match ? match[0] : null;
+}
+
 export default function Tx() {
   const [txMetadata, setTxMetadata] = useState<Metadata | null>(null);
   const { address, status } = useAccount();
@@ -232,6 +238,57 @@ export default function Tx() {
 
   console.log("txMetadata", txMetadata);
 
+  const isEnsAction = txMetadata?.action === "ENS Registration";
+
+  const {
+    sendTransaction: sendTransactionEnsOne,
+    isPending: isPendingEnsOne,
+    data: hashEnsOne,
+  } = useSendTransaction();
+
+  const { isLoading: isLoadingEnsOne, isSuccess: isSuccessEnsOne } =
+    useWaitForTransactionReceipt({
+      hash: hashEnsOne,
+    });
+
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (isSuccessEnsOne) {
+      setStep(1);
+    }
+  }, [isSuccessEnsOne]);
+
+  const {
+    sendTransaction: sendTransactionEnsTwo,
+    isPending: isPendingEnsTwo,
+    data: hashEnsTwo,
+  } = useSendTransaction();
+
+  const { isLoading: isLoadingEnsTwo, isSuccess: isSuccessEnsTwo } =
+    useWaitForTransactionReceipt({
+      hash: hashEnsTwo,
+    });
+
+  useEffect(() => {
+    if (isSuccessEnsTwo) {
+      setStep(2);
+    }
+  }, [isSuccessEnsTwo]);
+
+  const ensDomain = extractENSDomain(txMetadata?.data.description || "");
+
+  const [oneMinuteCounter, setOneMinuteCounter] = useState(60);
+
+  useEffect(() => {
+    if (step === 1 && oneMinuteCounter >= 0) {
+      const interval = setInterval(() => {
+        setOneMinuteCounter((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [step]);
+
   return txMetadata ? (
     <div className="flex flex-col gap-12 items-center w-[60rem] glass rounded-[2.5rem] p-10">
       {/* HEADER */}
@@ -265,36 +322,105 @@ export default function Tx() {
             </span>
           </div>
         )}
-        <div className="grid grid-cols-[40%_20%_40%] gap-0 justify-items-center items-center w-full p-4 py-8 border-[1px] border-[#ffffff21] rounded-[1.5rem]">
-          <TokenDetails
-            token={txMetadata.data.fromToken}
-            amount={txMetadata.data.fromAmount}
-            isFrom={true}
-            address={txMetadata.data.fromAddress}
-            size="lg"
-          />
-          <div className="col-span-1 w-fit">
-            {txMetadata?.action === "transfer" && (
-              <HiArrowLongRight color="white" className="w-[60px] h-[60px]" />
+        {isEnsAction ? (
+          <div className="flex flex-col w-full items-center gap-12">
+            <span className="max-w-[40rem] text-lg text-center">
+              You're going to register the ENS domain{" "}
+              <span className="text-accent">{ensDomain}</span>. For this, you
+              need first to bid, then wait for 1 minute, and if no one else
+              bids, you can register it.
+            </span>
+            {step === 1 && oneMinuteCounter > 0 && (
+              <span className="text-lg text-center">
+                Please wait for{" "}
+                <span className="text-accent">{oneMinuteCounter}</span> seconds
+                to complete the registration.
+              </span>
             )}
-            {txMetadata?.action === "swap" && (
-              <MdSwapHoriz color="white" className="w-[80px] h-[80px]" />
-            )}
-            {txMetadata?.action === "bridge" && (
-              <FaArrowRightLong color="white" className="w-[60px] h-[60px]" />
+            <ul className="steps w-full">
+              <li className="step step-accent">Bid</li>
+              <li className={`step ${step > 0 && "step-accent"}`}>Register</li>
+              <li className={`step ${step > 1 && "step-accent"}`}>Completed</li>
+            </ul>
+            {step !== 2 ? (
+              <button
+                className="btn btn-accent w-fit"
+                onClick={() => {
+                  wrongChain
+                    ? switchChain({ chainId: txChainId })
+                    : step === 0
+                      ? sendTransactionEnsOne(txMetadata.data.steps?.[0] as any)
+                      : sendTransactionEnsTwo(
+                          txMetadata.data.steps?.[1] as any,
+                        );
+                }}
+                disabled={
+                  notEnoughBalance ||
+                  isDisconnected ||
+                  isSwitchChainPending ||
+                  (step === 0 ? isPendingEnsOne : isPendingEnsTwo) ||
+                  (step === 0 ? isLoadingEnsOne : isLoadingEnsTwo) ||
+                  (step === 1 && oneMinuteCounter > 0)
+                }
+              >
+                <span className="text-xl">
+                  {isDisconnected
+                    ? "Connect Wallet"
+                    : wrongChain
+                      ? "Switch Chain"
+                      : step === 0
+                        ? `Bid ${ensDomain}`
+                        : `Register ${ensDomain}`}
+                </span>
+                {((step === 0 ? isPendingEnsOne : isPendingEnsTwo) ||
+                  (step === 0 ? isLoadingEnsOne : isLoadingEnsTwo)) && (
+                  <span className="loading loading-spinner loading-xs" />
+                )}
+              </button>
+            ) : (
+              <div className="flex flex-col gap-4 items-center">
+                <span className="icon icon-check text-2xl">
+                  ENS{" "}
+                  <a href={`${explorerUrl}/tx/${hashEnsTwo}`} target="_blank">
+                    Registered
+                  </a>
+                  !
+                </span>
+              </div>
             )}
           </div>
-          <TokenDetails
-            token={txMetadata?.data.toToken}
-            amount={txMetadata.data.toAmount}
-            isFrom={false}
-            address={txMetadata.data.toAddress}
-            size="lg"
-          />
-        </div>
+        ) : (
+          <div className="grid grid-cols-[40%_20%_40%] gap-0 justify-items-center items-center w-full p-4 py-8 border-[1px] border-[#ffffff21] rounded-[1.5rem]">
+            <TokenDetails
+              token={txMetadata.data.fromToken}
+              amount={txMetadata.data.fromAmount}
+              isFrom={true}
+              address={txMetadata.data.fromAddress}
+              size="lg"
+            />
+            <div className="col-span-1 w-fit">
+              {txMetadata?.action === "transfer" && (
+                <HiArrowLongRight color="white" className="w-[60px] h-[60px]" />
+              )}
+              {txMetadata?.action === "swap" && (
+                <MdSwapHoriz color="white" className="w-[80px] h-[80px]" />
+              )}
+              {txMetadata?.action === "bridge" && (
+                <FaArrowRightLong color="white" className="w-[60px] h-[60px]" />
+              )}
+            </div>
+            <TokenDetails
+              token={txMetadata?.data.toToken}
+              amount={txMetadata.data.toAmount}
+              isFrom={false}
+              address={txMetadata.data.toAddress}
+              size="lg"
+            />
+          </div>
+        )}
       </div>
 
-      {!isSuccessTx && (
+      {!isEnsAction && !isSuccessTx && (
         <div className="flex gap-4">
           {!notEnoughBalance && amountToApprove && (
             <button
@@ -360,7 +486,7 @@ export default function Tx() {
           {!isSuccessMint && (
             <>
               <h1 className="text-2xl">
-                Now you are an OG user of Snappy with Brian
+                Now you are an OG user of SnappyAI with Brian
               </h1>
               <button
                 className="btn btn-accent"
