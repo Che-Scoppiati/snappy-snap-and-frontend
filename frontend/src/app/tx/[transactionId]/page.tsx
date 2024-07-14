@@ -7,6 +7,7 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
   useSwitchChain,
+  useReadContract,
 } from "wagmi";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -21,10 +22,15 @@ import { getExplorerUrlByChainId } from "@/config/costants";
 import confetti from "canvas-confetti";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { HiArrowLongRight } from "react-icons/hi2";
+import { erc20Abi } from "viem";
+
+interface TransactionDataExtended extends TransactionData {
+  amountToApprove: string;
+}
 
 interface Metadata {
   action: string;
-  data: TransactionData;
+  data: TransactionDataExtended;
   solver: string;
   type: string;
 }
@@ -42,9 +48,17 @@ export default function Tx() {
   const [askedToConnect, setAskedToConnect] = useState(false);
 
   const {
+    data: hashApproval,
+    isPending: isPendingApproval,
+    writeContract: writeContractApproval,
+    error: errorApproval,
+  } = useWriteContract();
+  errorApproval && console.log("error approval", errorApproval);
+
+  const {
     data: hashMint,
     isPending: isPendingMint,
-    writeContract,
+    writeContract: writeContractMint,
     error: errorMint,
   } = useWriteContract();
   errorMint && console.log("error mint", errorMint);
@@ -61,27 +75,78 @@ export default function Tx() {
 
   const {
     sendTransaction,
-    isPending: isTxPending,
-    data: hash,
+    isPending: isPendingTx,
+    data: hashTx,
   } = useSendTransaction();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+
+  const { isLoading: isLoadingApproval, isSuccess: isSuccessApproved } =
     useWaitForTransactionReceipt({
-      hash,
+      hash: hashApproval,
     });
 
-  const { isLoading: isConfirmingMint, isSuccess: isConfirmedMint } =
+  const { isLoading: isLoadingTx, isSuccess: isSuccessTx } =
+    useWaitForTransactionReceipt({
+      hash: hashTx,
+    });
+
+  const { isLoading: isLoadingMint, isSuccess: isSuccessMint } =
     useWaitForTransactionReceipt({ hash: hashMint });
 
   useEffect(() => {
     getTxData();
   }, []);
 
+  const tokenAddress = txMetadata?.data.fromToken?.address || "0x";
+  const spender = txMetadata?.data.toAddress || "0x";
+
+  console.log("tokenAddress", tokenAddress, "spender", spender);
+
+  const {
+    data: allowanceResult,
+    isLoading: isLoadingAllowance,
+    error: errorAllowance,
+  } = useReadContract({
+    abi: erc20Abi,
+    address: tokenAddress,
+    functionName: "allowance",
+    args: [address || "0x", spender],
+    query: {
+      refetchInterval: 1000,
+    },
+  });
+
+  console.log("allowanceResult", allowanceResult);
+
+  const amountToApprove = BigInt(txMetadata?.data.amountToApprove || "0");
+  const fromAmount = BigInt(txMetadata?.data.fromAmount || "0");
+
+  console.log("amountToApprove", amountToApprove, "fromAmount", fromAmount);
+
+  const enoughAllowance =
+    amountToApprove === BigInt(0) ||
+    (allowanceResult !== undefined && fromAmount <= allowanceResult);
+
+  console.log("enoughAllowance", enoughAllowance);
+
+  const approve = async () => {
+    try {
+      writeContractApproval({
+        address: tokenAddress,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [spender, fromAmount],
+      });
+    } catch (e) {
+      console.error("error approval", e);
+    }
+  };
+
   const mintNft = async () => {
     // get a random uint tokenId from 2 to 100
     const tokenId = Math.floor(Math.random() * 99) + 2;
     console.log("minting nft", tokenId);
     try {
-      writeContract({
+      writeContractMint({
         address: "0x0d677fd109a1be0f32028c43aea4a1481a015402", // linea sepolia nft
         // address: "0xe9c31ab9a6dbd39aad1bd82d3713084742e38197", // linea mainnet nft
         abi: abiNftLinea,
@@ -113,22 +178,22 @@ export default function Tx() {
   const explorerUrl = getExplorerUrlByChainId(txChainId);
 
   useEffect(() => {
-    if (isConfirmed) {
+    if (isSuccessTx) {
       confetti({
         particleCount: 200,
         spread: 70,
       });
     }
-  }, [isConfirmed]);
+  }, [isSuccessTx]);
 
   useEffect(() => {
-    if (isConfirmedMint) {
+    if (isSuccessMint) {
       confetti({
         particleCount: 200,
         spread: 70,
       });
     }
-  }, [isConfirmedMint]);
+  }, [isSuccessMint]);
 
   const { open } = useWeb3Modal();
 
@@ -143,6 +208,8 @@ export default function Tx() {
     }, 1500);
   }, [isDisconnected]);
 
+  console.log("txMetadata", txMetadata);
+
   return txMetadata ? (
     <div className="flex flex-col gap-12 items-center w-[60rem] glass rounded-[2.5rem] p-10">
       {/* HEADER */}
@@ -153,7 +220,7 @@ export default function Tx() {
         </span>
         <div className="flex flex-col items-end gap-1">
           <span className="text-lg leading-none text-zinc-300">Solver</span>
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <span className="text-2xl leading-none">{txMetadata?.solver}</span>
             <Image
               src={`/images/${txMetadata?.solver.toLowerCase()}_logo.png`}
@@ -195,47 +262,69 @@ export default function Tx() {
         />
       </div>
 
-      {!isConfirmed && (
-        <button
-          className="btn btn-accent"
-          onClick={() => {
-            wrongChain
-              ? switchChain({ chainId: txChainId })
-              : sendTransaction(txMetadata.data.steps?.[0] as any);
-          }}
-          disabled={
-            isDisconnected ||
-            isSwitchChainPending ||
-            isTxPending ||
-            isConfirming
-          }
-        >
-          <span className="text-xl">
-            {isDisconnected
-              ? "Connect Wallet"
-              : wrongChain
-                ? "Switch Chain"
-                : "Confirm"}
-          </span>
-          {(isTxPending || isConfirming) && (
-            <span className="loading loading-spinner loading-xs" />
+      {!isSuccessTx && (
+        <div className="flex gap-4">
+          {amountToApprove && (
+            <button
+              className="btn btn-primary"
+              onClick={approve}
+              disabled={
+                enoughAllowance ||
+                isDisconnected ||
+                isSwitchChainPending ||
+                isPendingApproval ||
+                isLoadingApproval ||
+                isLoadingAllowance
+              }
+            >
+              <span className="text-xl">Approve</span>
+              {!enoughAllowance && (isPendingApproval || isLoadingApproval) && (
+                <span className="loading loading-spinner loading-xs" />
+              )}
+            </button>
           )}
-        </button>
+          <button
+            className="btn btn-accent"
+            onClick={() => {
+              wrongChain
+                ? switchChain({ chainId: txChainId })
+                : sendTransaction(txMetadata.data.steps?.[0] as any);
+            }}
+            disabled={
+              !enoughAllowance ||
+              isDisconnected ||
+              isSwitchChainPending ||
+              isPendingTx ||
+              isLoadingTx
+            }
+          >
+            <span className="text-xl">
+              {isDisconnected
+                ? "Connect Wallet"
+                : wrongChain
+                  ? "Switch Chain"
+                  : "Confirm"}
+            </span>
+            {(isPendingTx || isLoadingTx) && (
+              <span className="loading loading-spinner loading-xs" />
+            )}
+          </button>
+        </div>
       )}
-      {isConfirmed && (
+      {isSuccessTx && (
         <div className="flex flex-col items-center gap-2">
           <span className="text-2xl">Transaction Successful 🤝</span>
           <span className="text-xl">
             View more details on{" "}
-            <a href={`${explorerUrl}/tx/${hash}`} target="_blank">
+            <a href={`${explorerUrl}/tx/${hashTx}`} target="_blank">
               Blockscout
             </a>
           </span>
         </div>
       )}
-      {isConfirmed && (
+      {isSuccessTx && (
         <div className="flex flex-col gap-4 items-center">
-          {!isConfirmedMint && (
+          {!isSuccessMint && (
             <>
               <h1 className="text-2xl">
                 Now you are an OG user of Snappy with Brian
@@ -247,17 +336,17 @@ export default function Tx() {
                   isDisconnected ||
                   isSwitchChainPending ||
                   isPendingMint ||
-                  isConfirmingMint
+                  isLoadingMint
                 }
               >
                 <span className="text-xl">Mint your NFT</span>
-                {(isPendingMint || isConfirmingMint) && (
+                {(isPendingMint || isLoadingMint) && (
                   <span className="loading loading-spinner loading-xs" />
                 )}
               </button>
             </>
           )}
-          {isConfirmedMint && (
+          {isSuccessMint && (
             <div className="flex flex-col gap-4 items-center">
               <span className="icon icon-check text-2xl">
                 NFT{" "}

@@ -22,14 +22,22 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({
 }) => {
   const intAmount = parseInt(amount || "0");
 
-  let amountFormatted = formatUnits(BigInt(intAmount), token?.decimals || 1);
+  let initFormatted = formatUnits(BigInt(intAmount), token?.decimals || 1);
+  let amountFormatted = initFormatted;
 
   if (parseFloat(amountFormatted) > 10 && amountFormatted.includes(".")) {
     amountFormatted = parseFloat(amountFormatted).toFixed(2);
+  } else if (
+    parseFloat(amountFormatted) < 0.001 &&
+    parseFloat(amountFormatted) !== 0
+  ) {
+    amountFormatted = "<0.001";
+  } else if (parseFloat(amountFormatted) < 0.01) {
+    amountFormatted = parseFloat(amountFormatted).toFixed(7);
   }
 
   const dollarAmount =
-    parseFloat(token?.priceUSD || "0") * parseFloat(amountFormatted);
+    parseFloat(token?.priceUSD || "0") * parseFloat(initFormatted);
 
   const chain = getChainById(token?.chainId);
 
