@@ -2622,12 +2622,9 @@ export async function createTransactionInterface(
             );
           }),
           filteredFungibleTokens.length === 0
-            ? (text(
-                "Whaaaaaat??? Seems that you haven't funds. No problem, every hero started from the beginning."
-              ),
-              text(
-                "You can go to [SnappyAI page](https://snappyai.vercel.app/) to charge new some fresh tokens."
-              ))
+            ? text(
+                "Whaaaaaat??? Seems that you haven't funds. No problem, every hero started from the beginning. You can go to [SnappyAI page](https://snappyai.vercel.app/) to charge new some fresh tokens. "
+              )
             : null,
         ]),
       ]),

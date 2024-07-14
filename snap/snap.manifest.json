@@ -7,12 +7,12 @@
     "url": "https://github.com/Che-Scoppiati/snappy-snap-and-frontend.git"
   },
   "source": {
-    "shasum": "Y2jPmSVphOa/PMPEe8hYGVQgVnfLXUF9ff8InmBEK4A=",
+    "shasum": "6PEEd66qld5ROXFtW7XoCUnmRBVCUv0hmXQvPtv4LrM=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
         "iconPath": "images/logo-circled.svg",
-        "packageName": "snappyai",
+        "packageName": "@midenaeth/snappyai",
         "registry": "https://registry.npmjs.org/"
       }
     }
