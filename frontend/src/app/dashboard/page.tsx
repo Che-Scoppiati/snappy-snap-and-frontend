@@ -8,6 +8,20 @@ import axios, { AxiosResponse } from "axios";
 import { TokenDetails } from "@/components/TokenDetails";
 import { getShortAddress } from "@/lib/utils";
 
+// go here to see other chains https://www.blockscout.com/chains-and-projects
+const getBlockscoutUrl = (chainId: number | undefined) => {
+  const chainIdToBlockscoutUrl: { [key: number]: string } = {
+    1: "https://eth.blockscout.com",
+    59144: "https://explorer.linea.build",
+    // testnets
+    11155111: "https://eth-sepolia.blockscout.com",
+    59141: "https://explorer.sepolia.linea.build",
+  };
+  if (!chainId) return chainIdToBlockscoutUrl[1];
+  if (chainId in chainIdToBlockscoutUrl) return chainIdToBlockscoutUrl[chainId];
+  return chainIdToBlockscoutUrl[1];
+};
+
 const DashboardPage = () => {
   const [isPersonal, setIsPersonal] = useState<boolean>(false);
   const [isLoadingTransactions, setIsLoadingTransactions] =
@@ -15,15 +29,9 @@ const DashboardPage = () => {
 
   const [transactions, setTransactions] = useState<GetTxResult[]>([]);
   const account = useAccount();
-  // go here to see other chains https://www.blockscout.com/chains-and-projects
-  const baseBlockscout = "https://eth-sepolia.blockscout.com";
-  console.log("chain", account.chain);
 
   useEffect(() => {
     async function fetchTransactions() {
-      const bloc = await getBlockscoutTransaction(
-        "0x37c2e21bc8fe1977e3b9e8eafebe71774e28d1cf64b01988ece77cb8094c1a70",
-      );
       const response = await fetch(`/api/tx/`);
       const data = await response.json();
       setTransactions(data.tx.data);
@@ -50,12 +58,6 @@ const DashboardPage = () => {
     setIsLoadingTransactions(false);
   };
 
-  async function getBlockscoutTransaction(txHash: string) {
-    // reference https://eth-sepolia.blockscout.com/api-docs#operations-default-get_tx
-    const data = axios.get(`${baseBlockscout}/api/v2/transactions/${txHash}`);
-    return data;
-  }
-
   return (
     <div className="flex flex-col text-white w-full">
       <section className="flex flex-col gap-5 items-center justify-center">
@@ -79,53 +81,64 @@ const DashboardPage = () => {
             </a>
           </div>
           <div className={`collapse bg-transparent`}>
-            <input type="radio" name="my-accordion-1" defaultChecked />
             <div className="collapse-title text-xl font-medium w-full flex gap-1 justify-between">
-              <p className="w-1/4">Transaction</p>
-              <p className="w-1/4">Action</p>
-              <div className="flex gap-1 w-1/4">Solver</div>
-              <p className="w-1/4">From Address</p>
+              <p className="w-fit mr-4">Id</p>
+              <p className="w-1/5">Transaction</p>
+              <p className="w-1/5">Action</p>
+              <div className="flex gap-1 w-1/5">Solver</div>
+              <p className="w-1/5">From Address</p>
+              <p className="w-1/5">Details</p>
             </div>
           </div>
           {!isLoadingTransactions && transactions
             ? transactions.map((tx, index) => (
-                <div
+                <details
                   className={`collapse ${index % 2 === 0 ? "bg-base-300" : "bg-base-100"}`}
                   key={tx.id}
                 >
-                  <input
-                    type="radio"
-                    name="my-accordion-1"
-                    defaultChecked={index === 0 ? true : false}
-                  />
-                  <div className="collapse-title text-xl font-medium w-full flex gap-1 justify-between">
-                    <p className="w-1/4">
-                      <a
-                        href={`${baseBlockscout}/address/0x76333b4B92Ca51b692FAB95Bf48A77d60681A965`}
-                        style={{ zIndex: 2 }}
-                        target="_blank"
-                      >
-                        {getShortAddress(tx.txHash)}
-                      </a>
-                    </p>
-                    <p className="w-1/4">
-                      {tx.metadata?.action.charAt(0).toUpperCase() +
-                        tx.metadata?.action.slice(1)}
-                    </p>
-                    <div className="flex gap-1 w-1/4">
-                      {tx.metadata?.solver.charAt(0).toUpperCase() +
-                        tx.metadata?.solver.slice(1)}
-                      <Image
-                        src={`/images/${tx.metadata?.solver.toLowerCase()}_logo.png`}
-                        alt={`${tx.metadata?.solver} Logo`}
-                        width={30}
-                        height={30}
-                        className="w-6 h-6"
-                      />
+                  <summary className="collapse-title text-xl font-medium">
+                    <div className="w-full flex gap-1 justify-between">
+                      <p className="w-fit">{index + 1}</p>
+                      <p className="w-1/6" style={{ zIndex: 1 }}>
+                        <a
+                          href={
+                            tx.txHash
+                              ? `${getBlockscoutUrl(tx.metadata.data.fromChainId)}/address/${tx.txHash}`
+                              : undefined
+                          }
+                          target="_blank"
+                          style={{ zIndex: 10 }}
+                          className={tx.txHash ? "" : "bg-none cursor-default"}
+                        >
+                          {tx.txHash
+                            ? getShortAddress(tx.txHash)
+                            : "Not Published yet"}
+                        </a>
+                      </p>
+                      <p className="w-1/6">
+                        {tx.metadata?.action.charAt(0).toUpperCase() +
+                          tx.metadata?.action.slice(1)}
+                      </p>
+                      <div className="flex gap-1 w-1/6">
+                        {tx.metadata?.solver.charAt(0).toUpperCase() +
+                          tx.metadata?.solver.slice(1)}
+                        <Image
+                          src={`/images/${tx.metadata?.solver.toLowerCase()}_logo.png`}
+                          alt={`${tx.metadata?.solver} Logo`}
+                          width={30}
+                          height={30}
+                          className="w-6 h-6"
+                        />
+                      </div>
+                      <p className="w-1/6">{getShortAddress(tx.fromAddress)}</p>
+                      <p className="w-1/6" style={{ zIndex: 100 }}>
+                        <a className="btn" href={`/tx/${tx.id}`}>
+                          See
+                        </a>
+                      </p>
                     </div>
-                    <p className="w-1/4">{getShortAddress(tx.fromAddress)}</p>
-                  </div>
-                  <div className="collapse-content flex flex-col gap-4">
+                  </summary>
+                  <div className="collapse-content">
                     <hr className="w-full border border-1 border-white/10" />
                     <div className="flex gap-1 justify-around">
                       <div className="flex flex-col gap-1">
@@ -148,7 +161,7 @@ const DashboardPage = () => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </details>
               ))
             : null}
           {isLoadingTransactions && (
