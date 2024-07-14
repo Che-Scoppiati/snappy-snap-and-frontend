@@ -173,6 +173,7 @@ export default function Tx() {
           amount={txMetadata.data.fromAmount}
           isFrom={true}
           address={txMetadata.data.fromAddress}
+          size="lg"
         />
         <div className="col-span-1 w-fit">
           {txMetadata?.action === "transfer" && (
@@ -190,6 +191,7 @@ export default function Tx() {
           amount={txMetadata.data.toAmount}
           isFrom={false}
           address={txMetadata.data.toAddress}
+          size="lg"
         />
       </div>
 

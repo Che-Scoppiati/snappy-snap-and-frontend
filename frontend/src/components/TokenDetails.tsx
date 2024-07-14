@@ -1,4 +1,5 @@
 import { getChainById, logos } from "@/config/costants";
+import { getShortAddress } from "@/lib/utils";
 import { Token } from "@brian-ai/sdk";
 import Link from "next/link";
 import { HiOutlineExternalLink } from "react-icons/hi";
@@ -9,6 +10,7 @@ interface TokenDetailsProps {
   amount: string | undefined;
   isFrom: boolean;
   address: string | undefined;
+  size: "sm" | "md" | "lg";
 }
 
 export const TokenDetails: React.FC<TokenDetailsProps> = ({
@@ -16,6 +18,7 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({
   amount,
   isFrom,
   address,
+  size,
 }) => {
   const intAmount = parseInt(amount || "0");
 
@@ -32,7 +35,7 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({
 
   const explorerUrl = chain?.blockExplorers?.default.url;
 
-  const shortAddress = address?.slice(0, 6) + "..." + address?.slice(-4);
+  const shortAddress = getShortAddress(address || "");
 
   const chainLogo = logos[token?.chainId || 1];
 
@@ -54,19 +57,21 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({
           <img
             src={token?.logoURI || ""}
             alt="Token Logo"
-            className="w-[90px] h-[90px] rounded-full"
+            className={`${size === "lg" ? "w-[90px] h-[90px]" : size === "md" ? "w-[60px] h-[60px]" : "w-[45px] h-[45px]"} rounded-full`}
           />
           <img
             src={chainLogo}
             alt="Chain Logo"
-            className="w-[35px] h-[35px] rounded-full relative top-[-5px] left-[-25px]"
+            className={`${size === "lg" ? "w-[35px] h-[35px] top-[-5px] left-[-25px]" : size === "md" ? "w-[25px] h-[25px] top-[-5px] left-[-25px]" : "w-[20px] h-[20px] top-[-5px] left-[-15px]"} rounded-full relative`}
           />
         </div>
         <div className="flex flex-col">
-          <span className="text-3xl font-bold">
+          <span
+            className={`${size === "lg" ? "text-3xl" : "text-xl"} font-bold`}
+          >
             {amountFormatted} {token?.symbol}
           </span>
-          <span className="text-lg">${dollarAmount}</span>
+          <span className={`text-${size}`}>${dollarAmount}</span>
           <span>
             <Link
               href={`${explorerUrl}/address/${token?.address}`}
