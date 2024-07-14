@@ -1,4 +1,4 @@
-import { getChainById } from "@/config/costants";
+import { getChainById, logos } from "@/config/costants";
 import { Token } from "@brian-ai/sdk";
 import Link from "next/link";
 import { HiOutlineExternalLink } from "react-icons/hi";
@@ -30,14 +30,15 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({
 
   const chain = getChainById(token?.chainId);
 
-  const chainName = chain?.name;
   const explorerUrl = chain?.blockExplorers?.default.url;
 
   const shortAddress = address?.slice(0, 6) + "..." + address?.slice(-4);
 
+  const chainLogo = logos[token?.chainId || 1];
+
   return (
-    <div className="flex flex-col items-start gap-1">
-      <div className="flex gap-2">
+    <div className="flex flex-col items-start gap-2">
+      <div className="flex gap-2 leading-none">
         <span>{isFrom ? "From:" : "To:"}</span>
         <span>
           <Link href={`${explorerUrl}/address/${address}`} target="_blank">
@@ -47,14 +48,20 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({
             </span>
           </Link>
         </span>
-        <span>({chainName})</span>
       </div>
       <div className="flex gap-4 items-center">
-        <img
-          src={token?.logoURI || ""}
-          alt="Token Logo"
-          className="w-[90px] h-[90px] rounded-full"
-        />
+        <div className="flex items-end -mr-6">
+          <img
+            src={token?.logoURI || ""}
+            alt="Token Logo"
+            className="w-[90px] h-[90px] rounded-full"
+          />
+          <img
+            src={chainLogo}
+            alt="Chain Logo"
+            className="w-[35px] h-[35px] rounded-full relative top-[-5px] left-[-25px]"
+          />
+        </div>
         <div className="flex flex-col">
           <span className="text-3xl font-bold">
             {amountFormatted} {token?.symbol}

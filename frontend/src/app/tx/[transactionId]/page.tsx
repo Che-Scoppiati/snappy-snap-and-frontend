@@ -20,6 +20,7 @@ import { walletConnectProvider } from "@/context";
 import { getExplorerUrlByChainId } from "@/config/costants";
 import confetti from "canvas-confetti";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
+import { HiArrowLongRight } from "react-icons/hi2";
 
 interface Metadata {
   action: string;
@@ -120,6 +121,15 @@ export default function Tx() {
     }
   }, [isConfirmed]);
 
+  useEffect(() => {
+    if (isConfirmedMint) {
+      confetti({
+        particleCount: 200,
+        spread: 70,
+      });
+    }
+  }, [isConfirmedMint]);
+
   const { open } = useWeb3Modal();
 
   const isDisconnected = status === "disconnected";
@@ -130,14 +140,14 @@ export default function Tx() {
         open();
         setAskedToConnect(true);
       }
-    }, 2000);
+    }, 1500);
   }, [isDisconnected]);
 
   return txMetadata ? (
     <div className="flex flex-col gap-12 items-center w-[60rem] glass rounded-[2.5rem] p-10">
       {/* HEADER */}
       <div className="flex w-full justify-between">
-        <span className="text-[2.5rem] leading-1">
+        <span className="text-[2.5rem] leading-none">
           {txMetadata?.action.charAt(0).toUpperCase() +
             txMetadata?.action.slice(1)}
         </span>
@@ -157,7 +167,7 @@ export default function Tx() {
       </div>
 
       {/* DETAILS */}
-      <div className="grid grid-cols-[40%_20%_40%] gap-0 justify-items-center items-center w-full">
+      <div className="grid grid-cols-[40%_20%_40%] gap-0 justify-items-center items-center w-full p-4 py-8 border-[1px] border-[#ffffff21] rounded-[1.5rem]">
         <TokenDetails
           token={txMetadata.data.fromToken}
           amount={txMetadata.data.fromAmount}
@@ -166,7 +176,7 @@ export default function Tx() {
         />
         <div className="col-span-1 w-fit">
           {txMetadata?.action === "transfer" && (
-            <FaArrowRightLong color="white" className="w-[60px] h-[60px]" />
+            <HiArrowLongRight color="white" className="w-[60px] h-[60px]" />
           )}
           {txMetadata?.action === "swap" && (
             <MdSwapHoriz color="white" className="w-[80px] h-[80px]" />
@@ -228,7 +238,16 @@ export default function Tx() {
               <h1 className="text-2xl">
                 Now you are an OG user of Snappy with Brian
               </h1>
-              <button className="btn btn-accent" onClick={mintNft}>
+              <button
+                className="btn btn-accent"
+                onClick={mintNft}
+                disabled={
+                  isDisconnected ||
+                  isSwitchChainPending ||
+                  isPendingMint ||
+                  isConfirmingMint
+                }
+              >
                 <span className="text-xl">Mint your NFT</span>
                 {(isPendingMint || isConfirmingMint) && (
                   <span className="loading loading-spinner loading-xs" />
