@@ -1,11 +1,12 @@
 {
-  "name": "brian-snap",
+  "name": "snappyai",
   "version": "0.1.0",
-  "description": "The 'Hello, world!' of MetaMask Snaps, now written in TypeScript.",
+  "description": "Snappy AI - Your Web3 AI assistant inside MetaMask 🦊",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MetaMask/template-snap-monorepo.git"
+    "url": "https://github.com/Che-Scoppiati/snappy-snap-and-frontend.git"
   },
+  "author": "Che Scoppiati",
   "license": "(MIT-0 OR Apache-2.0)",
   "main": "./dist/bundle.js",
   "files": [
