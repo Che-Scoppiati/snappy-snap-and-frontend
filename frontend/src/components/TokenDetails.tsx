@@ -13,6 +13,11 @@ interface TokenDetailsProps {
   size: "sm" | "md" | "lg";
 }
 
+function formatDecimal(num: number, digits: number = 4): number {
+  const factor = Math.pow(10, digits);
+  return Math.floor(num * factor) / factor;
+}
+
 export const TokenDetails: React.FC<TokenDetailsProps> = ({
   token,
   amount,
@@ -25,19 +30,18 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({
   let initFormatted = formatUnits(BigInt(intAmount), token?.decimals || 1);
   let amountFormatted = initFormatted;
 
-  if (parseFloat(amountFormatted) > 10 && amountFormatted.includes(".")) {
-    amountFormatted = parseFloat(amountFormatted).toFixed(2);
-  } else if (
+  if (
     parseFloat(amountFormatted) < 0.001 &&
     parseFloat(amountFormatted) !== 0
   ) {
     amountFormatted = "<0.001";
-  } else if (parseFloat(amountFormatted) < 0.01) {
-    amountFormatted = parseFloat(amountFormatted).toFixed(7);
+  } else {
+    amountFormatted = formatDecimal(parseFloat(amountFormatted)).toString();
   }
 
-  const dollarAmount =
-    parseFloat(token?.priceUSD || "0") * parseFloat(initFormatted);
+  const dollarAmount = formatDecimal(
+    parseFloat(token?.priceUSD || "0") * parseFloat(initFormatted),
+  );
 
   const chain = getChainById(token?.chainId);
 

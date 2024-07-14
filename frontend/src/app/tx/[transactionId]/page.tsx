@@ -8,6 +8,7 @@ import {
   useWriteContract,
   useSwitchChain,
   useReadContract,
+  useBalance,
 } from "wagmi";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -98,6 +99,27 @@ export default function Tx() {
 
   const tokenAddress = txMetadata?.data.fromToken?.address || "0x";
   const spender = txMetadata?.data.toAddress || "0x";
+
+  const {
+    data: result,
+    isLoading: isLoadingBalance,
+    error: errorBalance,
+  } = useBalance(
+    tokenAddress !== "0x0000000000000000000000000000000000000000"
+      ? {
+          address: address || "0x",
+          token: tokenAddress,
+        }
+      : {
+          address: address || "0x",
+        },
+  );
+
+  const notEnoughBalance =
+    result !== undefined &&
+    BigInt(txMetadata?.data.fromAmount || "0") > result.value;
+
+  console.log("✅ balance", result);
 
   console.log("tokenAddress", tokenAddress, "spender", spender);
 
@@ -234,37 +256,47 @@ export default function Tx() {
       </div>
 
       {/* DETAILS */}
-      <div className="grid grid-cols-[40%_20%_40%] gap-0 justify-items-center items-center w-full p-4 py-8 border-[1px] border-[#ffffff21] rounded-[1.5rem]">
-        <TokenDetails
-          token={txMetadata.data.fromToken}
-          amount={txMetadata.data.fromAmount}
-          isFrom={true}
-          address={txMetadata.data.fromAddress}
-          size="lg"
-        />
-        <div className="col-span-1 w-fit">
-          {txMetadata?.action === "transfer" && (
-            <HiArrowLongRight color="white" className="w-[60px] h-[60px]" />
-          )}
-          {txMetadata?.action === "swap" && (
-            <MdSwapHoriz color="white" className="w-[80px] h-[80px]" />
-          )}
-          {txMetadata?.action === "bridge" && (
-            <FaArrowRightLong color="white" className="w-[60px] h-[60px]" />
-          )}
+      <div className="flex flex-col gap-4 items-start w-full">
+        {/* NOT ENOUGH BALANCE */}
+        {notEnoughBalance && (
+          <div className="flex flex-col gap-4 items-start w-full">
+            <span>
+              ⚠️ You don't have enough balance to perform this transaction!
+            </span>
+          </div>
+        )}
+        <div className="grid grid-cols-[40%_20%_40%] gap-0 justify-items-center items-center w-full p-4 py-8 border-[1px] border-[#ffffff21] rounded-[1.5rem]">
+          <TokenDetails
+            token={txMetadata.data.fromToken}
+            amount={txMetadata.data.fromAmount}
+            isFrom={true}
+            address={txMetadata.data.fromAddress}
+            size="lg"
+          />
+          <div className="col-span-1 w-fit">
+            {txMetadata?.action === "transfer" && (
+              <HiArrowLongRight color="white" className="w-[60px] h-[60px]" />
+            )}
+            {txMetadata?.action === "swap" && (
+              <MdSwapHoriz color="white" className="w-[80px] h-[80px]" />
+            )}
+            {txMetadata?.action === "bridge" && (
+              <FaArrowRightLong color="white" className="w-[60px] h-[60px]" />
+            )}
+          </div>
+          <TokenDetails
+            token={txMetadata?.data.toToken}
+            amount={txMetadata.data.toAmount}
+            isFrom={false}
+            address={txMetadata.data.toAddress}
+            size="lg"
+          />
         </div>
-        <TokenDetails
-          token={txMetadata?.data.toToken}
-          amount={txMetadata.data.toAmount}
-          isFrom={false}
-          address={txMetadata.data.toAddress}
-          size="lg"
-        />
       </div>
 
       {!isSuccessTx && (
         <div className="flex gap-4">
-          {amountToApprove && (
+          {!notEnoughBalance && amountToApprove && (
             <button
               className="btn btn-primary"
               onClick={approve}
@@ -291,6 +323,7 @@ export default function Tx() {
                 : sendTransaction(txMetadata.data.steps?.[0] as any);
             }}
             disabled={
+              notEnoughBalance ||
               !enoughAllowance ||
               isDisconnected ||
               isSwitchChainPending ||
